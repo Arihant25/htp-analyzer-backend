@@ -55,7 +55,7 @@ app = FastAPI(
 origins = [
     "http://localhost:3000",  # Next.js dev server
     "http://127.0.0.1:3000",  # Alternative localhost
-    "https://*.onrender.com",  # Render domains
+    "https://htp-analyzer-backend.onrender.com",  # Backend Render domain
     "https://htp-test-analyzer.vercel.app",  # Specific frontend domain
 ]
 
