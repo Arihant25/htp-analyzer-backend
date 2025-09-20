@@ -1,0 +1,13 @@
+train: data/raw/train/images
+val: data/raw/valid/images
+test: data/raw/test/images
+
+nc: 7
+names: ['chimney', 'door', 'house', 'roof', 'sun', 'wall', 'window']
+
+roboflow:
+  workspace: arihants-workspace
+  project: htp-lewxu-cc26t
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/arihants-workspace/htp-lewxu-cc26t/dataset/1

@@ -1,0 +1,22 @@
+services:
+  # Backend API Service for HTP Analyzer
+  - type: web
+    name: htp-analyzer-backend
+    env: python
+    runtime: python-3.11
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python -m uvicorn app:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PORT
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: "https://htp-test-analyzer.vercel.app,http://localhost:3000"
+      - key: RENDER_EXTERNAL_URL
+        sync: false
+      - key: PYTHONPATH
+        value: "/opt/render/project/src"
+    healthCheckPath: /health
+    plan: starter
+    region: oregon
+    branch: main
+    rootDir: .
