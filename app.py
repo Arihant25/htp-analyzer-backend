@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import aiofiles
+from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -20,6 +21,24 @@ from pydantic import BaseModel, validator
 
 # Add src directory to path
 sys.path.append(str(Path(__file__).parent / "src"))
+
+# Load environment variables
+load_dotenv('.env.local')
+
+# Environment configuration
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", 8000))
+MODEL_PATH = os.getenv("MODEL_PATH", "yolo11s.pt")
+CONFIDENCE_THRESHOLD = float(os.getenv("CONFIDENCE_THRESHOLD", 0.25))
+MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE", 10485760))  # 10MB default
+TEMP_FILE_CLEANUP_HOURS = int(os.getenv("TEMP_FILE_CLEANUP_HOURS", 1))
+STATIC_FILES_DIR = os.getenv("STATIC_FILES_DIR", "static")
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+RELOAD = os.getenv("RELOAD", "False").lower() == "true"
+
+# Parse allowed file types from environment
+ALLOWED_FILE_TYPES_STR = os.getenv("ALLOWED_FILE_TYPES", "image/jpeg,image/png,image/jpg,image/bmp,image/tiff")
+ALLOWED_FILE_TYPES = set(ALLOWED_FILE_TYPES_STR.split(","))
 
 from feature_extractor import HTPFeatureExtractor
 
@@ -105,9 +124,9 @@ class ErrorResponse(BaseModel):
     timestamp: datetime
 
 # Mount static files for serving generated reports and visualizations
-static_dir = Path("static")
+static_dir = Path(STATIC_FILES_DIR)
 static_dir.mkdir(exist_ok=True)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_FILES_DIR), name="static")
 
 @app.on_event("startup")
 async def startup_event():
@@ -119,7 +138,7 @@ async def startup_event():
         model_path = find_latest_model()
         if not model_path:
             # Use a default model if no trained model exists
-            model_path = "yolo11s.pt"
+            model_path = MODEL_PATH
             print(f"⚠️ No trained model found, using default: {model_path}")
         else:
             print(f"✅ Loading trained model: {model_path}")
@@ -154,12 +173,12 @@ def find_latest_model():
     return str(model_path) if model_path.exists() else None
 
 async def cleanup_temp_files():
-    """Clean up temporary files older than 1 hour."""
+    """Clean up temporary files older than specified hours."""
     current_time = datetime.now()
     to_remove = []
     
     for file_id, file_info in temp_files.items():
-        if current_time - file_info["created"] > timedelta(hours=1):
+        if current_time - file_info["created"] > timedelta(hours=TEMP_FILE_CLEANUP_HOURS):
             try:
                 if os.path.exists(file_info["path"]):
                     os.remove(file_info["path"])
@@ -193,7 +212,7 @@ async def health_check():
 async def analyze_image(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    confidence_threshold: float = 0.25
+    confidence_threshold: float = CONFIDENCE_THRESHOLD
 ):
     """
     Analyze a house drawing image and return psychological assessment.
@@ -219,20 +238,18 @@ async def analyze_image(
         )
     
     # Validate file type
-    allowed_types = {"image/jpeg", "image/png", "image/jpg", "image/bmp", "image/tiff"}
-    if file.content_type not in allowed_types:
+    if file.content_type not in ALLOWED_FILE_TYPES:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}"
+            detail=f"Invalid file type. Allowed types: {', '.join(ALLOWED_FILE_TYPES)}"
         )
     
-    # Validate file size (max 10MB)
-    max_size = 10 * 1024 * 1024  # 10MB
+    # Validate file size
     content = await file.read()
-    if len(content) > max_size:
+    if len(content) > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=400,
-            detail="File size too large. Maximum size is 10MB."
+            detail=f"File size too large. Maximum size is {MAX_FILE_SIZE / (1024*1024):.1f}MB."
         )
     
     # Reset file position
@@ -316,7 +333,7 @@ async def analyze_image(
 async def analyze_with_report(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    confidence_threshold: float = 0.25
+    confidence_threshold: float = CONFIDENCE_THRESHOLD
 ):
     """
     Analyze image and generate downloadable report files.
@@ -338,20 +355,18 @@ async def analyze_with_report(
         )
     
     # Validate file type
-    allowed_types = {"image/jpeg", "image/png", "image/jpg", "image/bmp", "image/tiff"}
-    if file.content_type not in allowed_types:
+    if file.content_type not in ALLOWED_FILE_TYPES:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}"
+            detail=f"Invalid file type. Allowed types: {', '.join(ALLOWED_FILE_TYPES)}"
         )
     
-    # Validate file size (max 10MB)
-    max_size = 10 * 1024 * 1024  # 10MB
+    # Validate file size
     content = await file.read()
-    if len(content) > max_size:
+    if len(content) > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=400,
-            detail="File size too large. Maximum size is 10MB."
+            detail=f"File size too large. Maximum size is {MAX_FILE_SIZE / (1024*1024):.1f}MB."
         )
     
     analysis_id = str(uuid.uuid4())
@@ -372,8 +387,8 @@ async def analyze_with_report(
         )
         
         # Generate report and visualization
-        report_path = feature_extractor.generate_report(analysis, output_dir="static")
-        viz_path = feature_extractor.visualize_analysis(analysis, output_dir="static")
+        report_path = feature_extractor.generate_report(analysis, output_dir=STATIC_FILES_DIR)
+        viz_path = feature_extractor.visualize_analysis(analysis, output_dir=STATIC_FILES_DIR)
         
         processing_time = (datetime.now() - start_time).total_seconds()
         
@@ -484,10 +499,23 @@ async def general_exception_handler(request, exc):
 if __name__ == "__main__":
     import uvicorn
     
-    # Development server
-    uvicorn.run(
-        "app:app",
-        host="0.0.0.0",
-        port=int(os.getenv("PORT", 8000)),
-        reload=True
-    )
+    # Check if running in production
+    is_production = os.getenv("RELOAD") == "False"
+    
+    if is_production:
+        # Production server
+        uvicorn.run(
+            "app:app",
+            host=HOST,
+            port=PORT,
+            reload=False,
+            workers=1
+        )
+    else:
+        # Development server - use environment variables
+        uvicorn.run(
+            "app:app",
+            host=HOST,
+            port=PORT,
+            reload=RELOAD
+        )
