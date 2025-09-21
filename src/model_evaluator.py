@@ -100,6 +100,11 @@ class HTPModelEvaluator:
 
         if test_data_path:
             print("Performing detailed test set evaluation...")
+            # Resolve test_data_path relative to data config directory
+            if not Path(test_data_path).is_absolute():
+                data_config_dir = Path(self.data_config_path).parent
+                test_data_path = str(data_config_dir / test_data_path)
+            
             custom_metrics = self._detailed_evaluation(
                 test_data_path, confidence_threshold
             )

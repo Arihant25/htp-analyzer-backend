@@ -1,0 +1,14 @@
+{
+  "model_path": "C:\\Users\\Arihant\\Git\\htp-analyzer-backend\\results\\training\\training_outputs\\htp_yolo11s_20250920_233343\\weights\\best.pt",
+  "results_dir": "C:\\Users\\Arihant\\Git\\htp-analyzer-backend\\results\\training\\training_outputs\\htp_yolo11s_20250920_233343",
+  "metrics": {
+    "final_epoch": 100,
+    "best_mAP50": 0.85524,
+    "best_mAP50_95": 0.71517,
+    "final_train_loss": 0.39073,
+    "final_val_loss": 0.9097
+  },
+  "plots": [
+    "C:\\Users\\Arihant\\Git\\htp-analyzer-backend\\results\\training\\training_outputs\\htp_yolo11s_20250920_233343\\training_curves.png"
+  ]
+}

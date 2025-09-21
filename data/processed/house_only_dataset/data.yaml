@@ -1,0 +1,11 @@
+names:
+- chimney
+- door
+- house
+- roof
+- wall
+- window
+nc: 6
+test: test/images
+train: train/images
+val: valid/images
