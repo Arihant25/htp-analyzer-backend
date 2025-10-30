@@ -1,18 +1,38 @@
 # HTP YOLO Model Evaluation Report
 
 ## Model Information
-- **Model Path**: results\training\training_outputs\htp_yolo11s_20250920_233343\weights\best.pt
+- **Model Path**: results\training\training_outputs\htp_yolo11s_20251029_230000\weights\best.pt
 - **Model Type**: YOLOv11 Small
 - **Classes**: chimney, door, house, roof, wall, window
-- **Evaluation Date**: 2025-09-21 06:04:54
+- **Evaluation Date**: 2025-10-30 06:14:03
 
 ## Overall Performance Metrics
 ### YOLO Validation Metrics
-- **mAP50**: 0.8720
-- **mAP50_95**: 0.7583
-- **precision**: 0.8692
-- **recall**: 0.8460
-- **f1_score**: 0.8574
+- **mAP50**: 0.8674
+- **mAP50_95**: 0.7292
+- **precision**: 0.8663
+- **recall**: 0.8215
+- **f1_score**: 0.8433
+
+### Class-wise Performance
+| Class | Precision | Recall | F1 Score | Support |
+|-------|-----------|---------|----------|---------|
+| chimney | 1.000 | 0.739 | 0.850 | 46 |
+| door | 0.974 | 0.949 | 0.961 | 78 |
+| house | 0.980 | 1.000 | 0.990 | 96 |
+| roof | 1.000 | 0.979 | 0.989 | 96 |
+| wall | 0.812 | 0.975 | 0.886 | 80 |
+| window | 1.000 | 1.000 | 1.000 | 86 |
+
+## HTP Psychological Assessment Metrics
+- **Overall HTP Score**: 0.8707
+- **Mean Completeness**: 0.8707
+- **Std Completeness**: 0.1883
+
+### Essential Feature Detection Rates
+- **house**: 0.980 (98.0%)
+- **door**: 0.755 (75.5%)
+- **window**: 0.878 (87.8%)
 
 ## Interpretation for HTP Assessment
 

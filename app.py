@@ -9,7 +9,7 @@ import tempfile
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import aiofiles
 from dotenv import load_dotenv
@@ -17,7 +17,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, ConfigDict
 
 # Add src directory to path
 sys.path.append(str(Path(__file__).parent / "src"))
@@ -41,6 +41,16 @@ ALLOWED_FILE_TYPES_STR = os.getenv("ALLOWED_FILE_TYPES", "image/jpeg,image/png,i
 ALLOWED_FILE_TYPES = set(ALLOWED_FILE_TYPES_STR.split(","))
 
 from feature_extractor import HTPFeatureExtractor
+
+# RAG and Gemini imports
+try:
+    from rag_indexer import RAGIndexer
+    from rag_query import RAGQueryEngine
+    from gemini_report import GeminiReportGenerator
+    RAG_AVAILABLE = True
+except ImportError:
+    RAG_AVAILABLE = False
+    print("⚠️ RAG modules not available. Install google-genai and pypdf for enhanced reports.")
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -85,10 +95,14 @@ async def add_security_headers(request, call_next):
 
 # Global variables
 feature_extractor: Optional[HTPFeatureExtractor] = None
+rag_query_engine: Optional['RAGQueryEngine'] = None
+gemini_generator: Optional['GeminiReportGenerator'] = None
 temp_files: Dict[str, Dict] = {}  # Track temporary files for cleanup
 
 # Pydantic models for API responses
 class AnalysisResult(BaseModel):
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
+    
     analysis_id: str
     house_size_category: str
     detected_features: List[str]
@@ -106,19 +120,23 @@ class AnalysisResult(BaseModel):
     door_present: bool
     window_count: int
     chimney_present: bool
-    detection_confidence: Dict[str, float]
+    detection_confidence: Dict[str, Union[float, List[float]]]
     psychological_indicators: Dict[str, List[str]]
 
 class AnalysisRequest(BaseModel):
     confidence_threshold: float = 0.25
     
 class HealthResponse(BaseModel):
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
+    
     status: str
     message: str
     model_loaded: bool
     timestamp: datetime
 
 class ErrorResponse(BaseModel):
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
+    
     error: str
     message: str
     timestamp: datetime
@@ -130,8 +148,8 @@ app.mount("/static", StaticFiles(directory=STATIC_FILES_DIR), name="static")
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize the ML model on startup."""
-    global feature_extractor
+    """Initialize the ML model and RAG system on startup."""
+    global feature_extractor, rag_query_engine, gemini_generator
     
     try:
         # Find the latest trained model
@@ -143,7 +161,21 @@ async def startup_event():
         else:
             print(f"✅ Loading trained model: {model_path}")
         
-        feature_extractor = HTPFeatureExtractor(model_path)
+        # Initialize RAG system if available
+        if RAG_AVAILABLE:
+            try:
+                await initialize_rag_system()
+            except Exception as e:
+                print(f"⚠️ Failed to initialize RAG system: {e}")
+                print("   Continuing without RAG enhancement...")
+                rag_query_engine = None
+                gemini_generator = None
+        
+        feature_extractor = HTPFeatureExtractor(
+            model_path,
+            rag_query_engine=rag_query_engine,
+            gemini_generator=gemini_generator
+        )
         print("🚀 HTP Feature Extractor initialized successfully")
         
     except Exception as e:
@@ -171,6 +203,122 @@ def find_latest_model():
     model_path = latest_run / "weights" / "best.pt"
 
     return str(model_path) if model_path.exists() else None
+
+
+async def initialize_rag_system():
+    """Initialize RAG indexing and query system."""
+    global rag_query_engine, gemini_generator
+    
+    rag_dir = Path("RAG")
+    index_path = rag_dir / "faiss_index.bin"
+    metadata_path = rag_dir / "index_metadata.pkl"
+    
+    # Check for PDF files in RAG folder
+    pdf_files = list(rag_dir.glob("*.pdf"))
+    
+    if not pdf_files:
+        print("⚠️ No PDF files found in RAG folder. Skipping RAG initialization.")
+        return
+    
+    pdf_path = pdf_files[0]
+    print(f"📚 Found knowledge base PDF: {pdf_path.name}")
+    
+    # Check for Gemini API key
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        print("⚠️ GEMINI_API_KEY not set. Skipping RAG initialization.")
+        print("   Set GEMINI_API_KEY environment variable to enable enhanced reports.")
+        return
+    
+    # Build index if it doesn't exist
+    if not index_path.exists() or not metadata_path.exists():
+        print("🔨 Building FAISS index from PDF...")
+        try:
+            indexer = RAGIndexer(api_key=api_key, embedding_dim=768)
+            indexer.build_index(str(pdf_path), output_dir=str(rag_dir))
+            print("✅ FAISS index built successfully")
+        except Exception as e:
+            print(f"❌ Failed to build index: {e}")
+            raise
+    else:
+        print("✅ Found existing FAISS index")
+    
+    # Initialize query engine
+    print("🔍 Initializing RAG query engine...")
+    rag_query_engine = RAGQueryEngine(
+        index_path=str(index_path),
+        metadata_path=str(metadata_path),
+        api_key=api_key,
+        embedding_dim=768,
+    )
+    
+    # Initialize Gemini report generator
+    print("🤖 Initializing Gemini report generator...")
+    gemini_generator = GeminiReportGenerator(api_key=api_key)
+    
+    print("✅ RAG system initialized successfully")
+
+
+async def generate_psychological_interpretation(analysis) -> str:
+    """
+    Generate psychological interpretation using RAG + Gemini if available.
+    Falls back to basic interpretation if RAG is not configured.
+    """
+    # Create basic interpretation
+    interpretation_parts = []
+    for category, indicators in analysis.psychological_indicators.items():
+        if indicators:
+            interpretation_parts.append(
+                f"{category.replace('_', ' ').title()}: {', '.join(indicators[:2])}"
+            )
+    
+    basic_interpretation = (
+        "; ".join(interpretation_parts)
+        if interpretation_parts
+        else "Standard developmental indicators observed"
+    )
+    
+    # Try to generate enhanced interpretation using RAG + Gemini
+    if rag_query_engine and gemini_generator:
+        try:
+            # Prepare features for RAG query
+            analysis_dict = {
+                "detected_features": analysis.detected_features,
+                "missing_features": analysis.missing_features,
+                "house_size_category": analysis.house_size_category,
+                "house_area_ratio": analysis.house_area_ratio,
+                "house_placement": analysis.house_placement,
+                "door_present": analysis.door_present,
+                "window_count": analysis.window_count,
+                "chimney_present": analysis.chimney_present,
+                "risk_factors": analysis.risk_factors,
+                "positive_indicators": analysis.positive_indicators,
+            }
+            
+            # Get relevant context from knowledge base
+            rag_context = rag_query_engine.get_context_for_analysis(
+                analysis_dict, top_k=5
+            )
+            
+            # DEBUG: Print RAG retrieved context
+            print("\n" + "=" * 80)
+            print("🔍 DEBUG: RAG RETRIEVED CONTEXT")
+            print("=" * 80)
+            print(rag_context)
+            print("=" * 80 + "\n")
+            
+            # Generate AI-powered interpretation
+            enhanced_interpretation = gemini_generator.generate_psychological_interpretation(
+                analysis_dict, rag_context
+            )
+            
+            return enhanced_interpretation
+            
+        except Exception as e:
+            print(f"⚠️ Warning: Could not generate enhanced interpretation: {e}")
+            # Fall back to basic interpretation
+    
+    return basic_interpretation
 
 async def cleanup_temp_files():
     """Clean up temporary files older than specified hours."""
@@ -282,19 +430,17 @@ async def analyze_image(
         # Calculate processing time
         processing_time = (datetime.now() - start_time).total_seconds()
         
-        # Calculate overall confidence score
-        overall_confidence = (
-            sum(analysis.detection_confidence.values()) / len(analysis.detection_confidence)
-            if analysis.detection_confidence else 0.0
-        )
+        # Calculate overall confidence score (flatten lists and average)
+        all_confidences = []
+        for conf_list in analysis.detection_confidence.values():
+            if isinstance(conf_list, list):
+                all_confidences.extend(conf_list)
+            else:
+                all_confidences.append(conf_list)
+        overall_confidence = sum(all_confidences) / len(all_confidences) if all_confidences else 0.0
         
-        # Create psychological interpretation summary
-        interpretation_parts = []
-        for category, indicators in analysis.psychological_indicators.items():
-            if indicators:
-                interpretation_parts.append(f"{category.replace('_', ' ').title()}: {', '.join(indicators[:2])}")
-        
-        psychological_interpretation = "; ".join(interpretation_parts) if interpretation_parts else "Standard developmental indicators observed"
+        # Generate psychological interpretation (with RAG + Gemini if available)
+        psychological_interpretation = await generate_psychological_interpretation(analysis)
         
         # Schedule cleanup
         background_tasks.add_task(cleanup_temp_file, analysis_id)
@@ -392,19 +538,17 @@ async def analyze_with_report(
         
         processing_time = (datetime.now() - start_time).total_seconds()
         
-        # Calculate overall confidence score
-        overall_confidence = (
-            sum(analysis.detection_confidence.values()) / len(analysis.detection_confidence)
-            if analysis.detection_confidence else 0.0
-        )
+        # Calculate overall confidence score (flatten lists and average)
+        all_confidences = []
+        for conf_list in analysis.detection_confidence.values():
+            if isinstance(conf_list, list):
+                all_confidences.extend(conf_list)
+            else:
+                all_confidences.append(conf_list)
+        overall_confidence = sum(all_confidences) / len(all_confidences) if all_confidences else 0.0
         
-        # Create psychological interpretation summary
-        interpretation_parts = []
-        for category, indicators in analysis.psychological_indicators.items():
-            if indicators:
-                interpretation_parts.append(f"{category.replace('_', ' ').title()}: {', '.join(indicators[:2])}")
-        
-        psychological_interpretation = "; ".join(interpretation_parts) if interpretation_parts else "Standard developmental indicators observed"
+        # Generate psychological interpretation (with RAG + Gemini if available)
+        psychological_interpretation = await generate_psychological_interpretation(analysis)
         
         # Schedule cleanup
         background_tasks.add_task(cleanup_temp_file_path, temp_file.name)

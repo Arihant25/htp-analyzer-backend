@@ -8,10 +8,18 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from ultralytics import YOLO
 from pathlib import Path
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime
 from tqdm import tqdm
+
+# RAG and Gemini imports (optional - will work without if not configured)
+try:
+    from rag_query import RAGQueryEngine
+    from gemini_report import GeminiReportGenerator
+    RAG_AVAILABLE = True
+except ImportError:
+    RAG_AVAILABLE = False
 
 
 @dataclass
@@ -53,15 +61,24 @@ class HTPFeatureAnalysis:
 class HTPFeatureExtractor:
     """Extract and analyze HTP features from house drawings using trained YOLO model."""
 
-    def __init__(self, model_path: str):
+    def __init__(
+        self,
+        model_path: str,
+        rag_query_engine: Optional['RAGQueryEngine'] = None,
+        gemini_generator: Optional['GeminiReportGenerator'] = None,
+    ):
         """
         Initialize feature extractor.
 
         Args:
             model_path: Path to trained YOLO model
+            rag_query_engine: Optional RAG query engine for knowledge retrieval
+            gemini_generator: Optional Gemini generator for AI-powered reports
         """
         self.model = YOLO(model_path)
         self.class_names = ["chimney", "door", "house", "roof", "wall", "window"]
+        self.rag_query_engine = rag_query_engine
+        self.gemini_generator = gemini_generator
 
         # HTP interpretation guidelines
         self.htp_guidelines = {
@@ -162,14 +179,23 @@ class HTPFeatureExtractor:
 
                     # Get bounding box coordinates
                     x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
-                    detections["boxes"][class_name] = {
+                    box_info = {
                         "bbox": [x1, y1, x2, y2],
                         "center": [(x1 + x2) / 2, (y1 + y2) / 2],
                         "width": x2 - x1,
                         "height": y2 - y1,
                         "area": (x2 - x1) * (y2 - y1),
                     }
-                    detections["confidences"][class_name] = confidence
+                    
+                    # Store multiple detections of the same class in a list
+                    if class_name not in detections["boxes"]:
+                        detections["boxes"][class_name] = []
+                    detections["boxes"][class_name].append(box_info)
+                    
+                    # Store confidences in a list as well
+                    if class_name not in detections["confidences"]:
+                        detections["confidences"][class_name] = []
+                    detections["confidences"][class_name].append(confidence)
 
         # Handle segmentation masks if available
         if result.masks is not None:
@@ -178,7 +204,9 @@ class HTPFeatureExtractor:
                     class_id = int(result.boxes[i].cls)
                     if class_id < len(self.class_names):
                         class_name = self.class_names[class_id]
-                        detections["masks"][class_name] = mask.data.cpu().numpy()
+                        if class_name not in detections["masks"]:
+                            detections["masks"][class_name] = []
+                        detections["masks"][class_name].append(mask.data.cpu().numpy())
 
         return detections
 
@@ -202,7 +230,8 @@ class HTPFeatureExtractor:
 
         # Analyze house size and placement
         if "house" in detections["boxes"]:
-            house_info = detections["boxes"]["house"]
+            # Use the first (or largest) house detection
+            house_info = detections["boxes"]["house"][0]
             house_area = house_info["area"]
             image_area = img_width * img_height
             house_area_ratio = house_area / image_area
@@ -278,7 +307,7 @@ class HTPFeatureExtractor:
             risk_factors.extend(["social difficulties", "isolation"])
 
         # Analyze window characteristics
-        window_count = len([k for k in detections["boxes"].keys() if k == "window"])
+        window_count = len(detections["boxes"].get("window", []))
         window_characteristics = self._analyze_windows(detections, window_count)
 
         # Analyze chimney
@@ -329,13 +358,14 @@ class HTPFeatureExtractor:
             "accessibility": "unknown",
         }
 
-        if "door" in detections["boxes"]:
-            door_info = detections["boxes"]["door"]
+        if "door" in detections["boxes"] and len(detections["boxes"]["door"]) > 0:
+            # Use the first door detection
+            door_info = detections["boxes"]["door"][0]
             door_area = door_info["area"]
 
             # Analyze relative size
-            if "house" in detections["boxes"]:
-                house_area = detections["boxes"]["house"]["area"]
+            if "house" in detections["boxes"] and len(detections["boxes"]["house"]) > 0:
+                house_area = detections["boxes"]["house"][0]["area"]
                 door_ratio = door_area / house_area if house_area > 0 else 0
 
                 if door_ratio < 0.02:
@@ -347,12 +377,12 @@ class HTPFeatureExtractor:
 
             # Analyze position relative to house
             door_center = door_info["center"]
-            if "house" in detections["boxes"]:
-                house_center = detections["boxes"]["house"]["center"]
+            if "house" in detections["boxes"] and len(detections["boxes"]["house"]) > 0:
+                house_center = detections["boxes"]["house"][0]["center"]
 
                 # Check if door is centered on house
                 horizontal_offset = abs(door_center[0] - house_center[0])
-                if horizontal_offset < detections["boxes"]["house"]["width"] * 0.1:
+                if horizontal_offset < detections["boxes"]["house"][0]["width"] * 0.1:
                     characteristics["position"] = "centered"
                 else:
                     characteristics["position"] = "off-center"
@@ -388,12 +418,13 @@ class HTPFeatureExtractor:
             "position": "unknown",
         }
 
-        if "chimney" in detections["boxes"]:
-            chimney_info = detections["boxes"]["chimney"]
+        if "chimney" in detections["boxes"] and len(detections["boxes"]["chimney"]) > 0:
+            # Use the first chimney detection
+            chimney_info = detections["boxes"]["chimney"][0]
 
             # Analyze size relative to house
-            if "house" in detections["boxes"]:
-                house_area = detections["boxes"]["house"]["area"]
+            if "house" in detections["boxes"] and len(detections["boxes"]["house"]) > 0:
+                house_area = detections["boxes"]["house"][0]["area"]
                 chimney_area = chimney_info["area"]
                 chimney_ratio = chimney_area / house_area if house_area > 0 else 0
 
@@ -425,12 +456,13 @@ class HTPFeatureExtractor:
             "size": "unknown",
         }
 
-        if "roof" in detections["boxes"]:
-            roof_info = detections["boxes"]["roof"]
+        if "roof" in detections["boxes"] and len(detections["boxes"]["roof"]) > 0:
+            # Use the first roof detection
+            roof_info = detections["boxes"]["roof"][0]
 
             # Analyze relative size
-            if "house" in detections["boxes"]:
-                house_area = detections["boxes"]["house"]["area"]
+            if "house" in detections["boxes"] and len(detections["boxes"]["house"]) > 0:
+                house_area = detections["boxes"]["house"][0]["area"]
                 roof_area = roof_info["area"]
                 roof_ratio = roof_area / house_area if house_area > 0 else 0
 
@@ -502,7 +534,14 @@ class HTPFeatureExtractor:
 """
 
         for feature, confidence in analysis.detection_confidence.items():
-            report += f"- **{feature}**: {confidence:.3f}\n"
+            if isinstance(confidence, list):
+                if len(confidence) > 1:
+                    avg_conf = sum(confidence) / len(confidence)
+                    report += f"- **{feature}**: {avg_conf:.3f} (average of {len(confidence)} detections)\n"
+                elif len(confidence) == 1:
+                    report += f"- **{feature}**: {confidence[0]:.3f}\n"
+            else:
+                report += f"- **{feature}**: {confidence:.3f}\n"
 
         report += f"""
 ---
@@ -562,10 +601,17 @@ class HTPFeatureExtractor:
         )
         axes[1, 0].set_title("Psychological Indicators Balance")
 
-        # Confidence scores
+        # Confidence scores (average if multiple detections per class)
         if analysis.detection_confidence:
-            features = list(analysis.detection_confidence.keys())
-            confidences = list(analysis.detection_confidence.values())
+            features = []
+            confidences = []
+            for feature, conf_list in analysis.detection_confidence.items():
+                if isinstance(conf_list, list):
+                    avg_conf = sum(conf_list) / len(conf_list) if conf_list else 0.0
+                    confidences.append(avg_conf)
+                else:
+                    confidences.append(conf_list)
+                features.append(feature)
 
             axes[1, 1].bar(features, confidences, color="blue", alpha=0.7)
             axes[1, 1].set_title("Detection Confidence Scores")
