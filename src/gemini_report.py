@@ -62,6 +62,19 @@ class GeminiReportGenerator:
 
         return response.text
 
+    def _format_characteristics(self, characteristics: dict) -> str:
+        """Format characteristics dictionary for prompt display."""
+        if not characteristics:
+            return "  No data available"
+        
+        formatted_lines = []
+        for key, value in characteristics.items():
+            if isinstance(value, list):
+                value = ', '.join(str(v) for v in value)
+            formatted_lines.append(f"  - {key.replace('_', ' ').title()}: {value}")
+        
+        return '\n'.join(formatted_lines) if formatted_lines else "  No data available"
+
     def _build_prompt(self, analysis_features: dict, rag_context: str) -> str:
         """Build comprehensive prompt for Gemini."""
         prompt = f"""You are an expert psychologist specializing in House-Tree-Person (HTP) projective drawing analysis. 
@@ -83,6 +96,23 @@ Based on the following HTP drawing analysis results and reference material from 
 - Window Count: {analysis_features.get('window_count', 0)}
 - Chimney Present: {analysis_features.get('chimney_present', False)}
 
+**Detailed Size Analysis:**
+
+*Door Characteristics:*
+{self._format_characteristics(analysis_features.get('door_characteristics', {}))}
+
+*Window Characteristics:*
+{self._format_characteristics(analysis_features.get('window_characteristics', {}))}
+
+*Chimney Characteristics:*
+{self._format_characteristics(analysis_features.get('chimney_characteristics', {}))}
+
+*Roof Characteristics:*
+{self._format_characteristics(analysis_features.get('roof_characteristics', {}))}
+
+*Wall Characteristics:*
+{self._format_characteristics(analysis_features.get('wall_characteristics', {}))}
+
 **Preliminary Indicators:**
 - Risk Factors: {', '.join(analysis_features.get('risk_factors', []))}
 - Positive Indicators: {', '.join(analysis_features.get('positive_indicators', []))}
@@ -96,10 +126,11 @@ Based on the following HTP drawing analysis results and reference material from 
 Based on the analysis results and reference material above, provide a comprehensive psychological interpretation that includes:
 
 1. **Overall Assessment**: Summarize the key psychological indicators observed in the drawing
-2. **Specific Feature Interpretations**: Explain the psychological significance of present and missing features
-3. **Emotional and Behavioral Indicators**: Describe what the drawing suggests about the subject's emotional state and behavioral tendencies
-4. **Clinical Considerations**: Highlight any risk factors or areas that may warrant further clinical attention
-5. **Positive Aspects**: Note any positive indicators of psychological wellbeing
+2. **Size and Proportion Analysis**: Interpret the psychological significance of the sizes and proportions of detected features (door, windows, chimney, roof, etc.) relative to the house and each other
+3. **Specific Feature Interpretations**: Explain the psychological significance of present and missing features
+4. **Emotional and Behavioral Indicators**: Describe what the drawing suggests about the subject's emotional state and behavioral tendencies
+5. **Clinical Considerations**: Highlight any risk factors or areas that may warrant further clinical attention, particularly those indicated by disproportionate sizing
+6. **Positive Aspects**: Note any positive indicators of psychological wellbeing
 
 Keep the interpretation:
 - Professional and evidence-based

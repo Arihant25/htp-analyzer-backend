@@ -9,7 +9,7 @@ import tempfile
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import aiofiles
 from dotenv import load_dotenv
@@ -118,8 +118,13 @@ class AnalysisResult(BaseModel):
     house_area_ratio: float
     house_placement: List[str]
     door_present: bool
+    door_characteristics: Dict[str, Any]
     window_count: int
+    window_characteristics: Dict[str, Any]
     chimney_present: bool
+    chimney_characteristics: Dict[str, Any]
+    roof_characteristics: Dict[str, Any]
+    wall_characteristics: Dict[str, Any]
     detection_confidence: Dict[str, Union[float, List[float]]]
     psychological_indicators: Dict[str, List[str]]
 
@@ -281,7 +286,7 @@ async def generate_psychological_interpretation(analysis) -> str:
     # Try to generate enhanced interpretation using RAG + Gemini
     if rag_query_engine and gemini_generator:
         try:
-            # Prepare features for RAG query
+            # Prepare features for RAG query (including detailed size information)
             analysis_dict = {
                 "detected_features": analysis.detected_features,
                 "missing_features": analysis.missing_features,
@@ -289,8 +294,13 @@ async def generate_psychological_interpretation(analysis) -> str:
                 "house_area_ratio": analysis.house_area_ratio,
                 "house_placement": analysis.house_placement,
                 "door_present": analysis.door_present,
+                "door_characteristics": analysis.door_characteristics,
                 "window_count": analysis.window_count,
+                "window_characteristics": analysis.window_characteristics,
                 "chimney_present": analysis.chimney_present,
+                "chimney_characteristics": analysis.chimney_characteristics,
+                "roof_characteristics": analysis.roof_characteristics,
+                "wall_characteristics": analysis.wall_characteristics,
                 "risk_factors": analysis.risk_factors,
                 "positive_indicators": analysis.positive_indicators,
             }
@@ -460,8 +470,13 @@ async def analyze_image(
             house_area_ratio=analysis.house_area_ratio,
             house_placement=analysis.house_placement,
             door_present=analysis.door_present,
+            door_characteristics=analysis.door_characteristics,
             window_count=analysis.window_count,
+            window_characteristics=analysis.window_characteristics,
             chimney_present=analysis.chimney_present,
+            chimney_characteristics=analysis.chimney_characteristics,
+            roof_characteristics=analysis.roof_characteristics,
+            wall_characteristics=analysis.wall_characteristics,
             detection_confidence=analysis.detection_confidence,
             psychological_indicators=analysis.psychological_indicators
         )
@@ -568,8 +583,13 @@ async def analyze_with_report(
             "house_area_ratio": analysis.house_area_ratio,
             "house_placement": analysis.house_placement,
             "door_present": analysis.door_present,
+            "door_characteristics": analysis.door_characteristics,
             "window_count": analysis.window_count,
+            "window_characteristics": analysis.window_characteristics,
             "chimney_present": analysis.chimney_present,
+            "chimney_characteristics": analysis.chimney_characteristics,
+            "roof_characteristics": analysis.roof_characteristics,
+            "wall_characteristics": analysis.wall_characteristics,
             "detection_confidence": analysis.detection_confidence,
             "psychological_indicators": analysis.psychological_indicators,
             "report_url": f"/static/{Path(report_path).name}" if report_path else None,

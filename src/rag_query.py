@@ -158,6 +158,28 @@ class RAGQueryEngine:
         if "chimney_present" in analysis_features and not analysis_features["chimney_present"]:
             query_parts.append("no chimney missing chimney")
 
+        # Add size-specific queries
+        if "door_characteristics" in analysis_features:
+            door_chars = analysis_features["door_characteristics"]
+            if door_chars.get("size_category") == "tiny":
+                query_parts.append("tiny door small door fearfulness")
+            elif door_chars.get("size_category") == "large":
+                query_parts.append("large door oversized door dependency")
+        
+        if "chimney_characteristics" in analysis_features:
+            chimney_chars = analysis_features["chimney_characteristics"]
+            if chimney_chars.get("size") == "large":
+                query_parts.append("large chimney oversized chimney")
+            elif chimney_chars.get("size") == "small":
+                query_parts.append("small chimney tiny chimney")
+        
+        if "roof_characteristics" in analysis_features:
+            roof_chars = analysis_features["roof_characteristics"]
+            if roof_chars.get("size") == "large":
+                query_parts.append("large roof oversized roof fantasy")
+            elif roof_chars.get("size") == "small":
+                query_parts.append("small roof tiny roof")
+
         # Combine query parts
         query = " ".join(query_parts)
         if not query:
