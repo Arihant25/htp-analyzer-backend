@@ -109,7 +109,9 @@ class AnalysisResult(BaseModel):
     missing_features: List[str]
     risk_factors: List[str]
     positive_indicators: List[str]
-    psychological_interpretation: str
+    psychological_interpretation: str  # Keep for backward compatibility
+    psychologist_interpretation: str
+    parent_interpretation: str
     overall_confidence_score: float
     analysis_timestamp: datetime
     processing_time_seconds: float
@@ -127,6 +129,10 @@ class AnalysisResult(BaseModel):
     wall_characteristics: Dict[str, Any]
     detection_confidence: Dict[str, Union[float, List[float]]]
     psychological_indicators: Dict[str, List[str]]
+    
+    # RAG context with page references
+    rag_context: Optional[str] = None
+    rag_page_references: Optional[List[Dict[str, Any]]] = None
 
 class AnalysisRequest(BaseModel):
     confidence_threshold: float = 0.25
@@ -264,10 +270,13 @@ async def initialize_rag_system():
     print("✅ RAG system initialized successfully")
 
 
-async def generate_psychological_interpretation(analysis) -> str:
+async def generate_psychological_interpretation(analysis) -> Dict[str, Any]:
     """
-    Generate psychological interpretation using RAG + Gemini if available.
+    Generate psychological interpretations for both psychologists and parents using RAG + Gemini if available.
     Falls back to basic interpretation if RAG is not configured.
+    
+    Returns:
+        Dict with 'psychologist', 'parent' interpretations, 'rag_context', and 'rag_page_references'
     """
     # Create basic interpretation
     interpretation_parts = []
@@ -283,7 +292,7 @@ async def generate_psychological_interpretation(analysis) -> str:
         else "Standard developmental indicators observed"
     )
     
-    # Try to generate enhanced interpretation using RAG + Gemini
+    # Try to generate enhanced interpretations using RAG + Gemini
     if rag_query_engine and gemini_generator:
         try:
             # Prepare features for RAG query (including detailed size information)
@@ -305,30 +314,67 @@ async def generate_psychological_interpretation(analysis) -> str:
                 "positive_indicators": analysis.positive_indicators,
             }
             
-            # Get relevant context from knowledge base
+            # Get relevant context from knowledge base with RAG search
+            rag_results = rag_query_engine.search(
+                " ".join([
+                    analysis.house_size_category,
+                    " ".join(analysis.detected_features),
+                    " ".join(analysis.missing_features)
+                ]),
+                top_k=5
+            )
+            
+            # Extract page references from RAG results
+            rag_page_references = []
+            for i, (chunk, distance, meta) in enumerate(rag_results, 1):
+                page_numbers = meta.get("page_numbers", [])
+                if page_numbers:
+                    rag_page_references.append({
+                        "reference_id": i,
+                        "pages": page_numbers,
+                        "distance": distance,
+                        "chunk_preview": chunk[:150] + "..." if len(chunk) > 150 else chunk
+                    })
+            
+            # Get full context (with page numbers already embedded)
             rag_context = rag_query_engine.get_context_for_analysis(
                 analysis_dict, top_k=5
             )
             
             # DEBUG: Print RAG retrieved context
             print("\n" + "=" * 80)
-            print("🔍 DEBUG: RAG RETRIEVED CONTEXT")
+            print("🔍 DEBUG: RAG RETRIEVED CONTEXT WITH PAGE NUMBERS")
             print("=" * 80)
             print(rag_context)
             print("=" * 80 + "\n")
             
-            # Generate AI-powered interpretation
-            enhanced_interpretation = gemini_generator.generate_psychological_interpretation(
+            # Generate AI-powered interpretations for both audiences
+            psychologist_interpretation = gemini_generator.generate_psychological_interpretation(
                 analysis_dict, rag_context
             )
             
-            return enhanced_interpretation
+            parent_interpretation = gemini_generator.generate_parent_friendly_interpretation(
+                analysis_dict, rag_context
+            )
+            
+            return {
+                "psychologist": psychologist_interpretation,
+                "parent": parent_interpretation,
+                "rag_context": rag_context,
+                "rag_page_references": rag_page_references
+            }
             
         except Exception as e:
-            print(f"⚠️ Warning: Could not generate enhanced interpretation: {e}")
-            # Fall back to basic interpretation
+            print(f"⚠️ Warning: Could not generate enhanced interpretations: {e}")
+            # Fall back to basic interpretation for both
     
-    return basic_interpretation
+    # Return basic interpretation for both if RAG/Gemini not available
+    return {
+        "psychologist": basic_interpretation,
+        "parent": basic_interpretation,
+        "rag_context": None,
+        "rag_page_references": None
+    }
 
 async def cleanup_temp_files():
     """Clean up temporary files older than specified hours."""
@@ -449,8 +495,8 @@ async def analyze_image(
                 all_confidences.append(conf_list)
         overall_confidence = sum(all_confidences) / len(all_confidences) if all_confidences else 0.0
         
-        # Generate psychological interpretation (with RAG + Gemini if available)
-        psychological_interpretation = await generate_psychological_interpretation(analysis)
+        # Generate psychological interpretations (with RAG + Gemini if available)
+        interpretations = await generate_psychological_interpretation(analysis)
         
         # Schedule cleanup
         background_tasks.add_task(cleanup_temp_file, analysis_id)
@@ -463,7 +509,9 @@ async def analyze_image(
             missing_features=analysis.missing_features,
             risk_factors=analysis.risk_factors,
             positive_indicators=analysis.positive_indicators,
-            psychological_interpretation=psychological_interpretation,
+            psychological_interpretation=interpretations["psychologist"],  # Keep for backward compatibility
+            psychologist_interpretation=interpretations["psychologist"],
+            parent_interpretation=interpretations["parent"],
             overall_confidence_score=overall_confidence,
             analysis_timestamp=start_time,
             processing_time_seconds=processing_time,
@@ -562,8 +610,8 @@ async def analyze_with_report(
                 all_confidences.append(conf_list)
         overall_confidence = sum(all_confidences) / len(all_confidences) if all_confidences else 0.0
         
-        # Generate psychological interpretation (with RAG + Gemini if available)
-        psychological_interpretation = await generate_psychological_interpretation(analysis)
+        # Generate psychological interpretations (with RAG + Gemini if available)
+        interpretations = await generate_psychological_interpretation(analysis)
         
         # Schedule cleanup
         background_tasks.add_task(cleanup_temp_file_path, temp_file.name)
@@ -576,7 +624,9 @@ async def analyze_with_report(
             "missing_features": analysis.missing_features,
             "risk_factors": analysis.risk_factors,
             "positive_indicators": analysis.positive_indicators,
-            "psychological_interpretation": psychological_interpretation,
+            "psychological_interpretation": interpretations["psychologist"],  # Keep for backward compatibility
+            "psychologist_interpretation": interpretations["psychologist"],
+            "parent_interpretation": interpretations["parent"],
             "overall_confidence_score": overall_confidence,
             "analysis_timestamp": start_time,
             "processing_time_seconds": processing_time,
@@ -593,7 +643,9 @@ async def analyze_with_report(
             "detection_confidence": analysis.detection_confidence,
             "psychological_indicators": analysis.psychological_indicators,
             "report_url": f"/static/{Path(report_path).name}" if report_path else None,
-            "visualization_url": f"/static/{Path(viz_path).name}" if viz_path else None
+            "visualization_url": f"/static/{Path(viz_path).name}" if viz_path else None,
+            "rag_context": interpretations.get("rag_context"),
+            "rag_page_references": interpretations.get("rag_page_references")
         }
         
     except Exception as e:

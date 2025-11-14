@@ -1,0 +1,928 @@
+[
+  {
+    "number": 1,
+    "title": "The Achromatic Phase (Pencil Drawings)",
+    "sections": {
+      "General Interpretations": [
+        {
+          "term": "CLOUDS",
+          "page": "1"
+        },
+        {
+          "term": "DETAILS",
+          "page": "1"
+        },
+        {
+          "term": "DETAILS (continued)",
+          "page": "3"
+        },
+        {
+          "term": "ERASURE",
+          "page": "5"
+        },
+        {
+          "term": "FATIGUE, MARKED",
+          "page": "5"
+        },
+        {
+          "term": "GROUNDLINE",
+          "page": "5"
+        },
+        {
+          "term": "GROUNDLINE (continued)",
+          "page": "7"
+        },
+        {
+          "term": "IDENTIFICATION WITH SELF",
+          "page": "7"
+        },
+        {
+          "term": "LINES",
+          "page": "7"
+        },
+        {
+          "term": "LINES (continued)",
+          "page": "9"
+        },
+        {
+          "term": "MOUNTAINS IN BACKGROUND",
+          "page": "11"
+        },
+        {
+          "term": "PAPER-BASING",
+          "page": "11"
+        },
+        {
+          "term": "PAPER-CHOPPING",
+          "page": "11"
+        },
+        {
+          "term": "PAPER-SIDING",
+          "page": "13"
+        },
+        {
+          "term": "PAPER-TOPPING",
+          "page": "13"
+        },
+        {
+          "term": "PAPER-TURNING",
+          "page": "13"
+        },
+        {
+          "term": "PERSPECTIVE",
+          "page": "13"
+        },
+        {
+          "term": "PERSPECTIVE (continued)",
+          "page": "15"
+        },
+        {
+          "term": "PLACEMENT OF WHOLE",
+          "page": "15"
+        },
+        {
+          "term": "Table 1 (Vertical Placement)",
+          "page": "17"
+        },
+        {
+          "term": "PLACEMENT OF WHOLE (continued)",
+          "page": "19"
+        },
+        {
+          "term": "PROPORTION",
+          "page": "19"
+        },
+        {
+          "term": "PROPORTION (continued)",
+          "page": "21"
+        },
+        {
+          "term": "PSYCHOMOTOR DECREASE, PERSISTENT",
+          "page": "21"
+        },
+        {
+          "term": "Table 2 (Horizontal Placement)",
+          "page": "21"
+        },
+        {
+          "term": "PSYCHOMOTOR INCREASE, MARKED",
+          "page": "23"
+        },
+        {
+          "term": "REDRAWING WITHOUT ERASURE OF ORIGINAL",
+          "page": "23"
+        },
+        {
+          "term": "REINFORCEMENT",
+          "page": "23"
+        },
+        {
+          "term": "SEQUENCE: SEGMENT BY SEGMENT",
+          "page": "23"
+        },
+        {
+          "term": "SHADING",
+          "page": "23"
+        },
+        {
+          "term": "SHADOW",
+          "page": "23"
+        },
+        {
+          "term": "SPACE CONSTRICTION",
+          "page": "25"
+        },
+        {
+          "term": "SUN",
+          "page": "25"
+        },
+        {
+          "term": "TRANSPARENCY",
+          "page": "25"
+        },
+        {
+          "term": "WEATHER, KIND OF",
+          "page": "25"
+        },
+        {
+          "term": "WHOLES",
+          "page": "27"
+        },
+        {
+          "term": "WIND",
+          "page": "27"
+        }
+      ],
+      "House Interpretations (Achromatic)": [
+        {
+          "term": "BATHROOM",
+          "page": "29"
+        },
+        {
+          "term": "BEDROOM",
+          "page": "29"
+        },
+        {
+          "term": "CHIMNEY",
+          "page": "29"
+        },
+        {
+          "term": "CHIMNEY (continued)",
+          "page": "31"
+        },
+        {
+          "term": "CHIMNEY (continued)",
+          "page": "33"
+        },
+        {
+          "term": "DETAILS (House)",
+          "page": "33"
+        },
+        {
+          "term": "DINING ROOM",
+          "page": "35"
+        },
+        {
+          "term": "DOOR(S)",
+          "page": "35"
+        },
+        {
+          "term": "DOORS (continued)",
+          "page": "37"
+        },
+        {
+          "term": "DOORKNOB, EMPHASIS UPON",
+          "page": "37"
+        },
+        {
+          "term": "EAVES, EMPHASIS UPON",
+          "page": "37"
+        },
+        {
+          "term": "ENDWALL",
+          "page": "37"
+        },
+        {
+          "term": "FENCE AROUND HOUSE",
+          "page": "37"
+        },
+        {
+          "term": "FENCE AROUND HOUSE (continued)",
+          "page": "39"
+        },
+        {
+          "term": "FIREPLACE",
+          "page": "39"
+        },
+        {
+          "term": "FLOOR PLAN DRAWN INSTEAD OF HOUSE",
+          "page": "39"
+        },
+        {
+          "term": "FLOWERS, TULIP OR DAISY-LIKE",
+          "page": "39"
+        },
+        {
+          "term": "FOUNDATION PILLARS, ABNORMALLY HIGH",
+          "page": "41"
+        },
+        {
+          "term": "FURNACE, INDIRECT EMPHASIS UPON",
+          "page": "41"
+        },
+        {
+          "term": "GUTTERS",
+          "page": "41"
+        },
+        {
+          "term": "HOUSE",
+          "page": "41"
+        },
+        {
+          "term": "HOUSE (continued)",
+          "page": "43"
+        },
+        {
+          "term": "KITCHEN",
+          "page": "43"
+        },
+        {
+          "term": "LIVING ROOM",
+          "page": "43"
+        },
+        {
+          "term": "MOVEMENT (House)",
+          "page": "43"
+        },
+        {
+          "term": "OUTHOUSE",
+          "page": "43"
+        },
+        {
+          "term": "OUTHOUSE (continued)",
+          "page": "45"
+        },
+        {
+          "term": "PAPER-BASING (House)",
+          "page": "45"
+        },
+        {
+          "term": "PAPER-SIDING (House)",
+          "page": "45"
+        },
+        {
+          "term": "PAPER-TOPPING (House)",
+          "page": "45"
+        },
+        {
+          "term": "PERSPECTIVE (House)",
+          "page": "45"
+        },
+        {
+          "term": "PERSPECTIVE (continued) (House)",
+          "page": "47"
+        },
+        {
+          "term": "PROFILE, ABSOLUTE (House)",
+          "page": "47"
+        },
+        {
+          "term": "RAIN SPOUTS",
+          "page": "47"
+        },
+        {
+          "term": "ROOF",
+          "page": "49"
+        },
+        {
+          "term": "ROOF AND CHIMNEY BLOWN DOWN",
+          "page": "49"
+        },
+        {
+          "term": "ROOF AND FENCE DRAWN ONLY FOR HOUSE",
+          "page": "49"
+        },
+        {
+          "term": "ROOF-WALLING",
+          "page": "49"
+        },
+        {
+          "term": "ROOM(S)",
+          "page": "51"
+        },
+        {
+          "term": "SHRUBS",
+          "page": "51"
+        },
+        {
+          "term": "SHUTTERS",
+          "page": "53"
+        },
+        {
+          "term": "SMOKE",
+          "page": "53"
+        },
+        {
+          "term": "STEPS, LEADING TO BLANK WALL",
+          "page": "53"
+        },
+        {
+          "term": "TRANSPARENT \"GLASS BOX\"",
+          "page": "53"
+        },
+        {
+          "term": "TREES (near House)",
+          "page": "55"
+        },
+        {
+          "term": "VENT STACK PROTRUDING FROM ROOF",
+          "page": "55"
+        },
+        {
+          "term": "WALKWAY",
+          "page": "55"
+        },
+        {
+          "term": "WALL(S)",
+          "page": "55"
+        },
+        {
+          "term": "WALL(S) (continued)",
+          "page": "57"
+        },
+        {
+          "term": "WALL(S) (continued)",
+          "page": "59"
+        },
+        {
+          "term": "WALL AND ROOF",
+          "page": "59"
+        },
+        {
+          "term": "WINDOW(S)",
+          "page": "61"
+        },
+        {
+          "term": "WINDOW(S) (continued)",
+          "page": "63"
+        },
+        {
+          "term": "WINDOW(S) (continued)",
+          "page": "65"
+        }
+      ],
+      "Tree Interpretations (Achromatic)": [
+        {
+          "term": "ANIMAL PEEKING FROM HOLE IN TREE",
+          "page": "67"
+        },
+        {
+          "term": "APPLE TREE",
+          "page": "67"
+        },
+        {
+          "term": "APPLES, FALLING OR FALLEN",
+          "page": "67"
+        },
+        {
+          "term": "BARK",
+          "page": "67"
+        },
+        {
+          "term": "BRANCHES",
+          "page": "67"
+        },
+        {
+          "term": "BRANCHES (continued)",
+          "page": "69"
+        },
+        {
+          "term": "BRANCHES (continued)",
+          "page": "71"
+        },
+        {
+          "term": "BRANCHES (continued)",
+          "page": "73"
+        },
+        {
+          "term": "BRANCH STRUCTURE",
+          "page": "73"
+        },
+        {
+          "term": "DETAILS, ESSENTIAL (Tree)",
+          "page": "73"
+        },
+        {
+          "term": "GROUND, TRANSPARENCY OF",
+          "page": "73"
+        },
+        {
+          "term": "GROUNDLINE, ARC-LIKE HILL",
+          "page": "75"
+        },
+        {
+          "term": "LEAVES",
+          "page": "75"
+        },
+        {
+          "term": "MOVEMENT (Tree)",
+          "page": "77"
+        },
+        {
+          "term": "PERSPECTIVE (Tree)",
+          "page": "77"
+        },
+        {
+          "term": "ROOTS",
+          "page": "77"
+        },
+        {
+          "term": "ROOTS (continued)",
+          "page": "79"
+        },
+        {
+          "term": "SCARS",
+          "page": "79"
+        },
+        {
+          "term": "SHADOW (Tree)",
+          "page": "79"
+        },
+        {
+          "term": "SUN (Tree)",
+          "page": "79"
+        },
+        {
+          "term": "SUN (continued) (Tree)",
+          "page": "81"
+        },
+        {
+          "term": "TREE",
+          "page": "81"
+        },
+        {
+          "term": "TREE (continued)",
+          "page": "83"
+        },
+        {
+          "term": "TREE (continued)",
+          "page": "85"
+        },
+        {
+          "term": "TREE (continued)",
+          "page": "87"
+        },
+        {
+          "term": "TRUNK",
+          "page": "87"
+        },
+        {
+          "term": "TRUNK (continued)",
+          "page": "89"
+        },
+        {
+          "term": "TRUNK (continued)",
+          "page": "91"
+        },
+        {
+          "term": "WIND (Tree)",
+          "page": "91"
+        },
+        {
+          "term": "WIND (continued) (Tree)",
+          "page": "93"
+        }
+      ],
+      "Person Interpretations (Achromatic)": [
+        {
+          "term": "ARMS",
+          "page": "95"
+        },
+        {
+          "term": "ARMS (continued)",
+          "page": "97"
+        },
+        {
+          "term": "BEARD",
+          "page": "97"
+        },
+        {
+          "term": "BELT, HEAVILY SHADED",
+          "page": "97"
+        },
+        {
+          "term": "BREASTS, OVEREMPHASIS UPON",
+          "page": "97"
+        },
+        {
+          "term": "BUTTOCKS, OVEREMPHASIS UPON",
+          "page": "97"
+        },
+        {
+          "term": "BUTTONS, MULTIPLICITY OF",
+          "page": "99"
+        },
+        {
+          "term": "CARTOON-LIKE PERSON",
+          "page": "99"
+        },
+        {
+          "term": "CHIN, OVEREMPHASIS UPON",
+          "page": "99"
+        },
+        {
+          "term": "CHINLINE, ABSENCE OF",
+          "page": "99"
+        },
+        {
+          "term": "CLOWN",
+          "page": "99"
+        },
+        {
+          "term": "DEFORMITY OF PART(S)",
+          "page": "99"
+        },
+        {
+          "term": "DETAILS, ESSENTIAL (Person)",
+          "page": "99"
+        },
+        {
+          "term": "EARRINGS",
+          "page": "101"
+        },
+        {
+          "term": "EARS",
+          "page": "101"
+        },
+        {
+          "term": "EYES",
+          "page": "101"
+        },
+        {
+          "term": "FACE, EMPHASIS UPON",
+          "page": "103"
+        },
+        {
+          "term": "FACIAL FEATURES",
+          "page": "103"
+        },
+        {
+          "term": "FEET",
+          "page": "103"
+        },
+        {
+          "term": "FEET (continued)",
+          "page": "105"
+        },
+        {
+          "term": "FINGERS",
+          "page": "105"
+        },
+        {
+          "term": "HAIR",
+          "page": "105"
+        },
+        {
+          "term": "HANDS",
+          "page": "105"
+        },
+        {
+          "term": "HANDS (continued)",
+          "page": "107"
+        },
+        {
+          "term": "HEAD",
+          "page": "107"
+        },
+        {
+          "term": "HEAD (continued)",
+          "page": "109"
+        },
+        {
+          "term": "KNEES, EMPHASIS UPON",
+          "page": "109"
+        },
+        {
+          "term": "LEGS",
+          "page": "109"
+        },
+        {
+          "term": "LEGS (continued)",
+          "page": "111"
+        },
+        {
+          "term": "MOUTH",
+          "page": "111"
+        },
+        {
+          "term": "MOVEMENT (Person)",
+          "page": "111"
+        },
+        {
+          "term": "MUSCLES, OVEREMPHASIZED",
+          "page": "113"
+        },
+        {
+          "term": "MUSTACHE",
+          "page": "113"
+        },
+        {
+          "term": "NECK",
+          "page": "113"
+        },
+        {
+          "term": "NOSE, OVEREMPHASIS UPON",
+          "page": "113"
+        },
+        {
+          "term": "PAPER-SIDING (Person)",
+          "page": "115"
+        },
+        {
+          "term": "PELVIC CLOSURE INCOMPLETE",
+          "page": "115"
+        },
+        {
+          "term": "PERSON",
+          "page": "115"
+        },
+        {
+          "term": "PERSON (continued)",
+          "page": "117"
+        },
+        {
+          "term": "POCKETS PLACED AT BREASTS",
+          "page": "117"
+        },
+        {
+          "term": "PROFILE (Person)",
+          "page": "117"
+        },
+        {
+          "term": "PROFILE (continued) (Person)",
+          "page": "119"
+        },
+        {
+          "term": "SHOULDERS",
+          "page": "119"
+        },
+        {
+          "term": "TEETH PROMINENTLY PRESENTED",
+          "page": "119"
+        },
+        {
+          "term": "TIE, OVEREMPHASIS UPON",
+          "page": "119"
+        },
+        {
+          "term": "TRUNK (Person)",
+          "page": "119"
+        },
+        {
+          "term": "TRUNK (continued) (Person)",
+          "page": "121"
+        },
+        {
+          "term": "WAISTLINE",
+          "page": "121"
+        },
+        {
+          "term": "WITCH",
+          "page": "121"
+        }
+      ]
+    }
+  },
+  {
+    "number": 2,
+    "title": "Post-Drawing Interrogation (PDI)",
+    "entries": [
+      {
+        "term": "PDI: House",
+        "page": "123"
+      },
+      {
+        "term": "PDI: Tree",
+        "page": "135"
+      },
+      {
+        "term": "PDI: Person",
+        "page": "149"
+      }
+    ]
+  },
+  {
+    "number": 3,
+    "title": "The Chromatic Phase (Crayon Drawings)",
+    "sections": {
+      "General Interpretations (Chromatic)": [
+        {
+          "term": "BLACK",
+          "page": "161"
+        },
+        {
+          "term": "BLENDING OR FUSION",
+          "page": "161"
+        },
+        {
+          "term": "BLUE",
+          "page": "161"
+        },
+        {
+          "term": "BLUE-BLACK COMBINATION",
+          "page": "161"
+        },
+        {
+          "term": "BLUE-GREEN",
+          "page": "161"
+        },
+        {
+          "term": "BROWN",
+          "page": "163"
+        },
+        {
+          "term": "COLOR, SIGNIFICANCE OF",
+          "page": "163"
+        },
+        {
+          "term": "CRAYON USED AS PENCIL ONLY",
+          "page": "163"
+        },
+        {
+          "term": "DISPARITY OF QUALITY (CRAYON/PENCIL)",
+          "page": "163"
+        },
+        {
+          "term": "GREEN",
+          "page": "163"
+        },
+        {
+          "term": "GREEN (continued)",
+          "page": "165"
+        },
+        {
+          "term": "GREEN-BLACK COMBINATION",
+          "page": "165"
+        },
+        {
+          "term": "ORANGE",
+          "page": "165"
+        },
+        {
+          "term": "PURPLE",
+          "page": "165"
+        },
+        {
+          "term": "RED",
+          "page": "165"
+        },
+        {
+          "term": "RED-ORANGE",
+          "page": "165"
+        },
+        {
+          "term": "ROSE-PINK",
+          "page": "165"
+        },
+        {
+          "term": "SHADING (Chromatic)",
+          "page": "167"
+        },
+        {
+          "term": "WHITE",
+          "page": "167"
+        },
+        {
+          "term": "WHOLES MUCH LARGER THAN PENCIL DRAWINGS",
+          "page": "167"
+        },
+        {
+          "term": "YELLOW",
+          "page": "167"
+        },
+        {
+          "term": "YELLOW-GREEN",
+          "page": "167"
+        },
+        {
+          "term": "YELLOW-ORANGE",
+          "page": "169"
+        }
+      ],
+      "House Interpretations (Chromatic)": [
+        {
+          "term": "AREAS COMMONLY SHADED",
+          "page": "171"
+        },
+        {
+          "term": "CHIMNEY SHADED BLACK",
+          "page": "171"
+        },
+        {
+          "term": "DOOR SHADED OR DRAWN WITH YELLOW",
+          "page": "171"
+        },
+        {
+          "term": "HOUSE (All red, All white, All yellow)",
+          "page": "171"
+        },
+        {
+          "term": "NUMBER OF COLORS (House)",
+          "page": "171"
+        },
+        {
+          "term": "ROOF (Black, Blue, Red, White, Yellow)",
+          "page": "173"
+        },
+        {
+          "term": "WALLS, YELLOW",
+          "page": "173"
+        },
+        {
+          "term": "WINDOW(S) (Of different colors)",
+          "page": "173"
+        },
+        {
+          "term": "WINDOW(S) (continued) (Shaded yellow)",
+          "page": "175"
+        }
+      ],
+      "Tree Interpretations (Chromatic)": [
+        {
+          "term": "BRANCHES (Chromatic)",
+          "page": "177"
+        },
+        {
+          "term": "BRANCH STRUCTURE SHADED YELLOW-GREEN",
+          "page": "177"
+        },
+        {
+          "term": "FOLIAGE SHADED BLUE-GREEN",
+          "page": "177"
+        },
+        {
+          "term": "FRUIT PRESENTED IN MANY DIFFERENT COLORS",
+          "page": "177"
+        },
+        {
+          "term": "NUMBER OF COLORS (Tree)",
+          "page": "177"
+        },
+        {
+          "term": "NUMBER OF COLORS (continued) (Tree)",
+          "page": "179"
+        },
+        {
+          "term": "TREE (Chromatic)",
+          "page": "179"
+        },
+        {
+          "term": "TREE (continued) (Chromatic)",
+          "page": "181"
+        },
+        {
+          "term": "TRUNK (Chromatic)",
+          "page": "181"
+        }
+      ],
+      "Person Interpretations (Chromatic)": [
+        {
+          "term": "CLOTHING, COLOR OF",
+          "page": "183"
+        },
+        {
+          "term": "CRAYON USED AS PENCIL DRAWING ONLY (Person)",
+          "page": "183"
+        },
+        {
+          "term": "EXPOSED BODY PARTS, COLOR OF",
+          "page": "183"
+        },
+        {
+          "term": "HAIR, Color of (Chromatic)",
+          "page": "183"
+        },
+        {
+          "term": "HAIR (continued) (Chromatic)",
+          "page": "185"
+        },
+        {
+          "term": "PERSON (Chromatic)",
+          "page": "185"
+        },
+        {
+          "term": "PERSON (continued) (Chromatic)",
+          "page": "187"
+        },
+        {
+          "term": "PERSON (continued) (Chromatic)",
+          "page": "189"
+        },
+        {
+          "term": "POCKETS PLACED AT BREASTS, HEAVILY SHADED WITH BLACK",
+          "page": "189"
+        }
+      ]
+    }
+  }
+]

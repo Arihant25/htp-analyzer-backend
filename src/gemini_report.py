@@ -62,6 +62,38 @@ class GeminiReportGenerator:
 
         return response.text
 
+    def generate_parent_friendly_interpretation(
+        self,
+        analysis_features: dict,
+        rag_context: str,
+        max_tokens: int = 800,
+    ) -> str:
+        """
+        Generate parent-friendly interpretation using Gemini with RAG context.
+
+        Args:
+            analysis_features: Dictionary containing analysis results
+            rag_context: Retrieved context from knowledge base
+            max_tokens: Maximum tokens for response
+
+        Returns:
+            Generated parent-friendly interpretation
+        """
+        # Build prompt with analysis and context
+        prompt = self._build_parent_prompt(analysis_features, rag_context)
+
+        # Generate response using Gemini
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.4,  # Slightly higher temperature for more engaging text
+                max_output_tokens=max_tokens,
+            ),
+        )
+
+        return response.text
+
     def _format_characteristics(self, characteristics: dict) -> str:
         """Format characteristics dictionary for prompt display."""
         if not characteristics:
@@ -131,6 +163,7 @@ Based on the analysis results and reference material above, provide a comprehens
 4. **Emotional and Behavioral Indicators**: Describe what the drawing suggests about the subject's emotional state and behavioral tendencies
 5. **Clinical Considerations**: Highlight any risk factors or areas that may warrant further clinical attention, particularly those indicated by disproportionate sizing
 6. **Positive Aspects**: Note any positive indicators of psychological wellbeing
+7. **References**: Include page numbers from the HTP interpretation guide where applicable
 
 Keep the interpretation:
 - Professional and evidence-based
@@ -142,6 +175,54 @@ Keep the interpretation:
 **IMPORTANT**: This is an automated analysis tool and should be used only as a preliminary assessment. Final interpretations should be made by qualified mental health professionals who can consider the complete clinical context.
 
 Generate the psychological interpretation now:"""
+
+        return prompt
+
+    def _build_parent_prompt(self, analysis_features: dict, rag_context: str) -> str:
+        """Build parent-friendly prompt for Gemini."""
+        prompt = f"""You are a child psychologist explaining a House-Tree-Person (HTP) drawing analysis to parents in simple, supportive language.
+
+Based on the following HTP drawing analysis results and reference material, provide a warm, encouraging interpretation that helps parents understand their child's drawing.
+
+## CHILD'S DRAWING ANALYSIS RESULTS:
+
+**What was drawn:** {', '.join(analysis_features.get('detected_features', []))}
+**What was missing:** {', '.join(analysis_features.get('missing_features', []))}
+
+**House Details:**
+- House size: {analysis_features.get('house_size_category', 'unknown')} ({analysis_features.get('house_area_ratio', 0):.1%} of the page)
+- House placement: {' and '.join(analysis_features.get('house_placement', []))}
+- Door: {'Present' if analysis_features.get('door_present', False) else 'Missing'}
+- Windows: {analysis_features.get('window_count', 0)}
+- Chimney: {'Present' if analysis_features.get('chimney_present', False) else 'Missing'}
+
+**Key Observations:**
+- Areas of strength: {', '.join(analysis_features.get('positive_indicators', []))}
+- Things to watch for: {', '.join(analysis_features.get('risk_factors', []))}
+
+## REFERENCE MATERIAL FROM HTP GUIDE:
+
+{rag_context}
+
+## INSTRUCTIONS FOR PARENTS:
+
+Write a supportive, parent-friendly explanation that:
+1. **Describes the house drawing** in simple terms - what does the house look like and what might it tell us about how the child sees their home or family?
+2. **Explains the meaning** in everyday language - avoid technical terms, use words like "might feel" or "could be feeling"
+3. **Highlights strengths** - focus on positive aspects and what the child is doing well
+4. **Offers gentle guidance** - suggest ways parents can support their child based on the drawing
+5. **Encourages understanding** - help parents see this as a window into their child's world
+6. **References**: Include page numbers from the HTP interpretation guide where applicable for parents who want to learn more
+
+Use warm, supportive language like a caring teacher or counselor would use with parents. Structure it as a narrative story about the child's drawing, not as a clinical report.
+
+Keep it to 400-600 words, written as flowing paragraphs that parents can easily read and understand.
+
+Start with something like: "Looking at your child's house drawing, I can see..." and end with encouragement.
+
+**IMPORTANT**: This is not a diagnosis - it's just one way to understand what your child might be feeling or thinking. Every child is unique!
+
+Generate the parent-friendly interpretation now:"""
 
         return prompt
 

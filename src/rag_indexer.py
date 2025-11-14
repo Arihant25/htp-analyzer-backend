@@ -3,6 +3,7 @@ RAG Indexer for HTP Analysis
 Indexes PDF documents using Gemini Embeddings and FAISS for retrieval.
 """
 
+import json
 import os
 import pickle
 from pathlib import Path
@@ -45,6 +46,7 @@ class RAGIndexer:
         self.index: Optional[faiss.IndexFlatL2] = None
         self.chunks: List[str] = []
         self.metadata: List[dict] = []
+        self.term_to_page: dict = {}  # Maps terms to page numbers
 
     def extract_text_from_pdf(self, pdf_path: str) -> str:
         """
@@ -64,6 +66,78 @@ class RAGIndexer:
                 text += f"\n[Page {page_num}]\n{page_text}"
 
         return text
+
+    def load_term_mapping(self, mapping_path: str = None) -> None:
+        """
+        Load term-to-page mapping from JSON file.
+
+        Args:
+            mapping_path: Path to mapping.json file. If None, searches in parent directory.
+        """
+        if mapping_path is None:
+            # Try to find mapping.json in the parent directory
+            mapping_path = Path(__file__).parent.parent / "mapping.json"
+        else:
+            mapping_path = Path(mapping_path)
+
+        if not mapping_path.exists():
+            print(f"⚠️  Mapping file not found at {mapping_path}")
+            return
+
+        try:
+            with open(mapping_path, 'r') as f:
+                mapping_data = json.load(f)
+
+            # Extract all terms and their page numbers
+            for chapter in mapping_data:
+                if "sections" in chapter:
+                    for section_name, entries in chapter["sections"].items():
+                        for entry in entries:
+                            if "term" in entry and "page" in entry:
+                                term = entry["term"].upper()
+                                page = entry["page"]
+                                # Store mapping (term might appear in multiple sections)
+                                if term not in self.term_to_page:
+                                    self.term_to_page[term] = []
+                                self.term_to_page[term].append(page)
+                elif "entries" in chapter:
+                    for entry in chapter["entries"]:
+                        if "term" in entry and "page" in entry:
+                            term = entry["term"].upper()
+                            page = entry["page"]
+                            if term not in self.term_to_page:
+                                self.term_to_page[term] = []
+                            self.term_to_page[term].append(page)
+
+            print(f"✅ Loaded {len(self.term_to_page)} terms from mapping file")
+        except Exception as e:
+            print(f"❌ Error loading mapping file: {e}")
+
+    def _extract_page_references(self, chunk_text: str) -> List[str]:
+        """
+        Extract page numbers from chunk text by looking for [Page X] markers.
+
+        Args:
+            chunk_text: Text chunk to analyze
+
+        Returns:
+            List of unique page numbers found in the chunk
+        """
+        import re
+        pages = set()
+        
+        # Look for [Page N] markers in the text
+        page_markers = re.findall(r'\[Page (\d+)\]', chunk_text)
+        pages.update(page_markers)
+        
+        # Also try term-based extraction as fallback if term_to_page is loaded
+        if self.term_to_page:
+            text_upper = chunk_text.upper()
+            for term, page_list in self.term_to_page.items():
+                if term in text_upper:
+                    pages.update(page_list)
+
+        return sorted(list(pages), key=lambda x: int(x) if x.isdigit() else 0)
 
     def chunk_text(
         self, text: str, chunk_size: int = 500, overlap: int = 50
@@ -94,6 +168,7 @@ class RAGIndexer:
             # If adding this sentence exceeds chunk size, save current chunk
             if current_size + sentence_size > chunk_size and current_chunk:
                 chunk_text = " ".join(current_chunk)
+                page_refs = self._extract_page_references(chunk_text)
                 chunks.append(
                     (
                         chunk_text,
@@ -101,6 +176,7 @@ class RAGIndexer:
                             "chunk_id": chunk_id,
                             "size": len(chunk_text),
                             "sentence_count": len(current_chunk),
+                            "page_numbers": page_refs,
                         },
                     )
                 )
@@ -125,6 +201,7 @@ class RAGIndexer:
         # Add final chunk
         if current_chunk:
             chunk_text = " ".join(current_chunk)
+            page_refs = self._extract_page_references(chunk_text)
             chunks.append(
                 (
                     chunk_text,
@@ -132,6 +209,7 @@ class RAGIndexer:
                         "chunk_id": chunk_id,
                         "size": len(chunk_text),
                         "sentence_count": len(current_chunk),
+                        "page_numbers": page_refs,
                     },
                 )
             )
@@ -189,6 +267,9 @@ class RAGIndexer:
         Returns:
             Tuple of (index_path, metadata_path)
         """
+        # Load term mapping first
+        self.load_term_mapping()
+
         print(f"📄 Extracting text from PDF: {pdf_path}")
         text = self.extract_text_from_pdf(pdf_path)
 
@@ -219,9 +300,13 @@ class RAGIndexer:
 
         print(f"💾 Saving metadata to {metadata_path}")
         with open(metadata_path, "wb") as f:
-            pickle.dump({"chunks": self.chunks, "metadata": self.metadata}, f)
+            pickle.dump({
+                "chunks": self.chunks, 
+                "metadata": self.metadata,
+                "term_to_page": self.term_to_page  # Save the term mapping
+            }, f)
 
-        print(f"✅ Indexing complete! Indexed {len(self.chunks)} chunks")
+        print(f"✅ Indexing complete! Indexed {len(self.chunks)} chunks with {len(self.term_to_page)} terms mapped")
 
         return str(index_path), str(metadata_path)
 
@@ -241,8 +326,22 @@ class RAGIndexer:
             data = pickle.load(f)
             self.chunks = data["chunks"]
             self.metadata = data["metadata"]
+            # Load term_to_page mapping if available (for backward compatibility)
+            self.term_to_page = data.get("term_to_page", {})
 
-        print(f"✅ Loaded index with {len(self.chunks)} chunks")
+        # If term_to_page wasn't in the saved data, try to load it now
+        if not self.term_to_page:
+            print("⚠️  term_to_page mapping not found in metadata, attempting to load from mapping.json...")
+            self.load_term_mapping()
+            # Re-extract page references for all metadata entries
+            if self.term_to_page and self.chunks:
+                print("🔄 Re-extracting page references with loaded mapping...")
+                for i, chunk in enumerate(self.chunks):
+                    page_refs = self._extract_page_references(chunk)
+                    if page_refs:
+                        self.metadata[i]["page_numbers"] = page_refs
+
+        print(f"✅ Loaded index with {len(self.chunks)} chunks and {len(self.term_to_page)} mapped terms")
 
 
 def main():

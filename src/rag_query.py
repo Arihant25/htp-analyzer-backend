@@ -114,6 +114,23 @@ class RAGQueryEngine:
 
         return results
 
+    def _format_chunk_with_pages(self, chunk_text: str, metadata: dict) -> str:
+        """
+        Format chunk text with page number references.
+
+        Args:
+            chunk_text: The chunk text
+            metadata: Metadata dict containing page_numbers
+
+        Returns:
+            Formatted chunk with page references
+        """
+        page_numbers = metadata.get("page_numbers", [])
+        if page_numbers:
+            pages_str = ", ".join(str(p) for p in page_numbers)
+            return f"{chunk_text}\n\n[Reference Pages: {pages_str}]"
+        return chunk_text
+
     def get_context_for_analysis(
         self,
         analysis_features: dict,
@@ -199,7 +216,8 @@ class RAGQueryEngine:
             
             # Only include results with reasonable similarity (lower distance = more similar)
             if distance < 1.5:  # Adjust threshold as needed
-                context_parts.append(f"[Reference {i}]\n{chunk.strip()}")
+                formatted_chunk = self._format_chunk_with_pages(chunk, meta)
+                context_parts.append(f"[Reference {i}]\n{formatted_chunk}")
                 print(f"    ✓ Included in context (distance < 1.5)")
             else:
                 print(f"    ✗ Excluded (distance >= 1.5)")
